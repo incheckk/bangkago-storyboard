@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BangkaGo — Prototype</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #020a12;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 0 60px;
+      font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+    .phone {
+      width: 375px;
+      height: 812px;
+      border-radius: 48px;
+      overflow: hidden;
+      background: #060F1E;
+      box-shadow: 0 0 0 8px #111827, 0 0 0 11px #040810, 0 40px 100px rgba(0,0,0,0.85);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .screen {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
+    .notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 30px;
+      background: #040810;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+    .status-bar {
+      position: absolute;
+      top: 8px; left: 20px; right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 101;
+    }
+    .status-bar .time { color: #fff; font-size: 12px; font-weight: 700; }
+    .status-bar .icons { color: #fff; font-size: 11px; opacity: 0.85; display: flex; gap: 5px; align-items: center; }
+    .sea-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(165deg,#061520 0%,#0b2d4a 40%,#0d3555 70%,#081f35 100%);
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes slideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+  </style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <span class="icons">▲▲▲ 🔋</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 1: WELCOME
+  ═══════════════════════════════════════ -->
+  <div class="screen active" id="s-welcome" style="background:linear-gradient(175deg,#061520 0%,#0b2d4a 50%,#061520 100%);align-items:center;justify-content:center;padding:40px 28px;">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.18" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+      <path d="M0,400 Q90,370 180,385 Q270,400 375,370" stroke="#00C9B1" stroke-width="1" fill="none"/>
+      <path d="M0,440 Q90,410 180,425 Q270,440 375,410" stroke="#00C9B1" stroke-width=".7" fill="none"/>
+      <path d="M0,480 Q90,450 180,465 Q270,480 375,450" stroke="#00C9B1" stroke-width=".5" fill="none"/>
+      <circle cx="80" cy="200" r="1.5" fill="#00C9B1" opacity=".6"/>
+      <circle cx="150" cy="120" r="1" fill="#00C9B1" opacity=".5"/>
+      <circle cx="290" cy="160" r="2" fill="#00C9B1" opacity=".4"/>
+      <circle cx="320" cy="300" r="1.2" fill="#00C9B1" opacity=".5"/>
+      <circle cx="50" cy="350" r="1.5" fill="#00C9B1" opacity=".3"/>
+    </svg>
+    <div style="text-align:center;z-index:2;display:flex;flex-direction:column;align-items:center;">
+      <div style="width:90px;height:90px;border-radius:50%;background:rgba(0,201,177,.15);border:2px solid rgba(0,201,177,.4);display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:28px;">🚤</div>
+      <div style="font-size:40px;font-weight:900;color:#F8FBFF;letter-spacing:-1px;line-height:1;">Bangka<span style="color:#00C9B1;">Go</span></div>
+      <div style="font-size:14px;color:#8AACC8;margin-top:10px;margin-bottom:50px;line-height:1.6;max-width:260px;text-align:center;">Your trusted partner for inter-island rides, island hopping &amp; parcel delivery in Cebu</div>
+      <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px;">
+        <button onclick="go('s-signin')" style="width:100%;padding:16px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:18px;color:#060F1E;font-weight:700;font-size:16px;cursor:pointer;">Sign In</button>
+        <button onclick="go('s-signup')" style="width:100%;padding:16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:18px;color:#F8FBFF;font-weight:600;font-size:16px;cursor:pointer;">Create Account</button>
+      </div>
+      <div style="margin-top:32px;color:#8AACC8;font-size:12px;">Serving Mactan, Olango, Caohagan &amp; more</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 2: SIGN IN
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-signin" style="background:#060F1E;overflow-y:auto;">
+    <div style="background:linear-gradient(180deg,#0A2342,#060F1E);padding:52px 24px 24px;">
+      <button onclick="go('s-welcome')" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="font-size:28px;font-weight:800;color:#F8FBFF;">Welcome back 👋</div>
+      <div style="color:#8AACC8;font-size:14px;margin-top:6px;">Sign in to continue</div>
+    </div>
+    <div style="padding:8px 24px 40px;flex:1;display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="color:#8AACC8;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:8px;">EMAIL</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;color:#F8FBFF;font-size:15px;">juan.dela.cruz@gmail.com</div>
+      </div>
+      <div>
+        <div style="color:#8AACC8;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:8px;">PASSWORD</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;color:#8AACC8;font-size:15px;display:flex;justify-content:space-between;align-items:center;">
+          <span>••••••••</span><span style="color:#00C9B1;font-size:13px;cursor:pointer;">Show</span>
+        </div>
+      </div>
+      <div style="text-align:right;"><span style="color:#00C9B1;font-size:13px;cursor:pointer;">Forgot password?</span></div>
+      <button onclick="go('s-role')" style="width:100%;padding:16px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:18px;color:#060F1E;font-weight:700;font-size:16px;cursor:pointer;margin-top:8px;">Sign In</button>
+      <div style="text-align:center;color:#8AACC8;font-size:13px;">Don't have an account? <span style="color:#00C9B1;cursor:pointer;" onclick="go('s-signup')">Sign Up</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+        <span style="color:#8AACC8;font-size:12px;">or</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+      </div>
+      <button style="width:100%;padding:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:18px;color:#F8FBFF;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span style="font-size:18px;">G</span> Continue with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 3: SIGN UP
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-signup" style="background:#060F1E;overflow-y:auto;">
+    <div style="background:linear-gradient(180deg,#0A2342,#060F1E);padding:52px 24px 24px;">
+      <button onclick="go('s-welcome')" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="font-size:28px;font-weight:800;color:#F8FBFF;">Create Account</div>
+      <div style="color:#8AACC8;font-size:14px;margin-top:6px;">Join the BangkaGo community</div>
+    </div>
+    <div style="padding:8px 24px 40px;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;">
+          <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:7px;">FIRST NAME</div>
+          <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;color:#F8FBFF;font-size:14px;">Juan</div>
+        </div>
+        <div style="flex:1;">
+          <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:7px;">LAST NAME</div>
+          <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;color:#F8FBFF;font-size:14px;">Dela Cruz</div>
+        </div>
+      </div>
+      <div>
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:7px;">PHONE NUMBER</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;color:#F8FBFF;font-size:14px;">09XX XXX XXXX</div>
+      </div>
+      <div>
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:7px;">EMAIL</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;color:#F8FBFF;font-size:14px;">juandelacruz@gmail.com</div>
+      </div>
+      <div>
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:7px;">PASSWORD</div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;color:#8AACC8;font-size:14px;">••••••••</div>
+      </div>
+      <button onclick="go('s-role')" style="width:100%;padding:16px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:18px;color:#060F1E;font-weight:700;font-size:16px;cursor:pointer;margin-top:4px;">Create Account</button>
+      <div style="text-align:center;color:#8AACC8;font-size:13px;">Already have an account? <span style="color:#00C9B1;cursor:pointer;" onclick="go('s-signin')">Sign In</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 4: ROLE SELECT
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-role" style="background:#060F1E;align-items:center;justify-content:center;padding:40px 24px;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-size:26px;font-weight:800;color:#F8FBFF;">How will you use</div>
+      <div style="font-size:26px;font-weight:900;color:#00C9B1;">BangkaGo?</div>
+      <div style="color:#8AACC8;font-size:14px;margin-top:10px;">Choose your role — you can change this later</div>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:16px;">
+      <button onclick="go('s-passenger')" style="width:100%;padding:24px 20px;background:rgba(0,201,177,.1);border:2px solid rgba(0,201,177,.35);border-radius:22px;cursor:pointer;display:flex;align-items:center;gap:18px;text-align:left;">
+        <div style="width:60px;height:60px;border-radius:18px;background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🧍</div>
+        <div>
+          <div style="color:#F8FBFF;font-weight:700;font-size:17px;margin-bottom:4px;">Passenger</div>
+          <div style="color:#8AACC8;font-size:13px;line-height:1.5;">Book boat rides, island hopping tours, and send parcels across Cebu's islands</div>
+        </div>
+      </button>
+      <button onclick="go('s-bangkero')" style="width:100%;padding:24px 20px;background:rgba(255,179,71,.1);border:2px solid rgba(255,179,71,.35);border-radius:22px;cursor:pointer;display:flex;align-items:center;gap:18px;text-align:left;">
+        <div style="width:60px;height:60px;border-radius:18px;background:rgba(255,179,71,.15);border:1px solid rgba(255,179,71,.3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">⚓</div>
+        <div>
+          <div style="color:#F8FBFF;font-weight:700;font-size:17px;margin-bottom:4px;">Bangkero</div>
+          <div style="color:#8AACC8;font-size:13px;line-height:1.5;">Offer rides, accept bookings, and grow your income as a boat operator</div>
+        </div>
+      </button>
+    </div>
+    <div style="margin-top:28px;text-align:center;color:#8AACC8;font-size:12px;padding:0 16px;line-height:1.6;">Bangkeros will need to verify their permit number and boat details before going live</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 5: PASSENGER HOME
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-passenger" style="position:relative;">
+    <div class="sea-bg"></div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+      <!-- water lines -->
+      <path d="M0,400 Q80,388 160,395 Q240,402 375,385" stroke="#00C9B1" stroke-width=".8" fill="none" opacity=".12"/>
+      <path d="M0,450 Q80,438 160,445 Q240,452 375,435" stroke="#00C9B1" stroke-width=".6" fill="none" opacity=".08"/>
+      <!-- Mactan island -->
+      <path d="M198,352 Q228,332 258,342 Q288,352 308,372 Q328,392 318,422 Q308,452 288,462 Q268,472 248,457 Q228,442 218,422 Q208,402 198,382Z" fill="#1e5234" opacity=".7"/>
+      <text x="245" y="407" font-size="8" fill="white" opacity=".7" font-weight="600">MACTAN</text>
+      <!-- Olango -->
+      <path d="M100,140 Q126,125 156,130 Q186,135 196,156 Q206,177 191,197 Q176,217 151,222 Q126,227 106,212 Q86,197 86,171 Q86,156 100,140Z" fill="#1e5234" opacity=".75"/>
+      <text x="128" y="182" font-size="8" fill="white" opacity=".85" font-weight="700">OLANGO</text>
+      <!-- Small islands -->
+      <ellipse cx="68" cy="108" rx="20" ry="12" fill="#235c38" opacity=".7"/>
+      <text x="54" y="112" font-size="7" fill="white" opacity=".65">Caohagan</text>
+      <ellipse cx="160" cy="84" rx="14" ry="8" fill="#235c38" opacity=".65"/>
+      <text x="148" y="88" font-size="6.5" fill="white" opacity=".65">Nalusuan</text>
+      <!-- Pier dot -->
+      <circle cx="253" cy="347" r="5" fill="#00C9B1" opacity=".9"/>
+      <circle cx="253" cy="347" r="11" fill="none" stroke="#00C9B1" stroke-width="1.2" opacity=".3"/>
+      <text x="261" y="351" font-size="8" fill="#00C9B1" opacity=".9" font-weight="600">Pier 1</text>
+    </svg>
+
+    <!-- animated boats -->
+    <div id="boat1" style="position:absolute;left:182px;top:195px;z-index:5;font-size:18px;transform:translate(-50%,-50%);">🚤</div>
+    <div id="boat2" style="position:absolute;left:258px;top:265px;z-index:5;font-size:16px;transform:translate(-50%,-50%);">🚤</div>
+    <div id="boat3" style="position:absolute;left:118px;top:155px;z-index:5;font-size:15px;transform:translate(-50%,-50%);">🚤</div>
+
+    <!-- top bar -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:36px 18px 18px;background:linear-gradient(180deg,rgba(6,15,30,.9) 0%,transparent 100%);z-index:10;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:24px;font-weight:900;color:#F8FBFF;letter-spacing:-.5px;">Bangka<span style="color:#00C9B1;">Go</span></div>
+          <div style="color:#8AACC8;font-size:11px;margin-top:1px;">📍 Mactan, Lapu-Lapu City</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#00C9B1;animation:pulse 1.6s infinite;"></div>
+          <button onclick="go('s-drawer')" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:3.5px;padding:0;">
+            <div style="width:16px;height:2px;background:#F8FBFF;border-radius:2px;"></div>
+            <div style="width:16px;height:2px;background:#F8FBFF;border-radius:2px;"></div>
+            <div style="width:16px;height:2px;background:#F8FBFF;border-radius:2px;"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom sheet -->
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#0D1F35;border-radius:28px 28px 0 0;border:1px solid rgba(255,255,255,.1);z-index:20;padding:0 0 24px;">
+      <div style="display:flex;justify-content:center;padding:12px 0 6px;">
+        <div style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);"></div>
+      </div>
+      <div style="padding:0 18px;">
+        <!-- live badge -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#00C9B1;animation:pulse 1.6s infinite;"></div>
+          <span style="color:#00C9B1;font-size:12px;font-weight:700;">3 bangkas nearby</span>
+          <span style="color:#8AACC8;font-size:11px;margin-left:4px;">· Weather: Good ✓</span>
+        </div>
+
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:12px;">WHAT DO YOU NEED?</div>
+
+        <!-- service cards -->
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <button onclick="go('s-quickride')" style="flex:1;padding:14px 8px;background:rgba(0,201,177,.1);border:1.5px solid rgba(0,201,177,.35);border-radius:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:rgba(0,201,177,.12);border:1.5px solid rgba(0,201,177,.3);display:flex;align-items:center;justify-content:center;font-size:22px;">🚤</div>
+            <div style="color:#F8FBFF;font-weight:700;font-size:13px;">Quick Ride</div>
+            <div style="color:#00C9B1;font-size:11px;">Inter-island</div>
+          </button>
+          <button onclick="go('s-hopping')" style="flex:1;padding:14px 8px;background:rgba(46,134,171,.12);border:1.5px solid rgba(46,134,171,.35);border-radius:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:rgba(46,134,171,.12);border:1.5px solid rgba(46,134,171,.3);display:flex;align-items:center;justify-content:center;font-size:22px;">🏝️</div>
+            <div style="color:#F8FBFF;font-weight:700;font-size:13px;">Island Hop</div>
+            <div style="color:#2E86AB;font-size:11px;">Multi-stop</div>
+          </button>
+          <button onclick="go('s-padala')" style="flex:1;padding:14px 8px;background:rgba(255,179,71,.1);border:1.5px solid rgba(255,179,71,.35);border-radius:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:rgba(255,179,71,.1);border:1.5px solid rgba(255,179,71,.3);display:flex;align-items:center;justify-content:center;font-size:22px;">📦</div>
+            <div style="color:#F8FBFF;font-weight:700;font-size:13px;">Padala</div>
+            <div style="color:#FFB347;font-size:11px;">Send parcel</div>
+          </button>
+        </div>
+
+        <!-- recent trips -->
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:10px;">RECENT TRIPS</div>
+        <div onclick="go('s-quickride')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:15px;">🏝️</div>
+          <div style="flex:1;">
+            <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Olango Island Port</div>
+            <div style="color:#8AACC8;font-size:11px;">Yesterday · ₱150</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div onclick="go('s-hopping')" style="display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:15px;">🏝️</div>
+          <div style="flex:1;">
+            <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Island Hopping · 3 stops</div>
+            <div style="color:#8AACC8;font-size:11px;">Mar 1 · ₱850</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 6: QUICK RIDE
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-quickride" style="position:relative;">
+    <div class="sea-bg"></div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+      <path d="M253,347 Q215,280 160,200 Q148,175 143,158" stroke="#00C9B1" stroke-width="2" stroke-dasharray="8,5" fill="none" opacity=".7"/>
+      <path d="M198,352 Q228,332 258,342 Q288,352 308,372 Q328,392 318,422 Q308,452 288,462 Q268,472 248,457 Q228,442 218,422Z" fill="#1e5234" opacity=".7"/>
+      <path d="M100,140 Q126,125 156,130 Q186,135 196,156 Q206,177 191,197 Q176,217 151,222 Q126,227 106,212 Q86,197 86,171 Q86,156 100,140Z" fill="#1e5234" opacity=".7"/>
+      <circle cx="253" cy="347" r="6" fill="#00C9B1" opacity=".9"/>
+      <circle cx="143" cy="158" r="6" fill="#FF6B6B" opacity=".9"/>
+      <circle cx="143" cy="158" r="13" fill="none" stroke="#FF6B6B" stroke-width="1.5" opacity=".4"/>
+      <text x="260" y="351" font-size="8" fill="#00C9B1" font-weight="700">Pier 1</text>
+      <text x="150" y="155" font-size="8" fill="#FF6B6B" font-weight="700">Olango</text>
+    </svg>
+    <div style="position:absolute;top:0;left:0;right:0;height:110px;background:linear-gradient(180deg,rgba(6,15,30,.9) 0%,transparent 100%);z-index:10;"></div>
+    <div style="position:absolute;top:36px;left:16px;right:16px;display:flex;align-items:center;gap:12px;z-index:11;">
+      <button onclick="go('s-passenger')" style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="color:#F8FBFF;font-weight:800;font-size:18px;">🚤 Quick Boat Ride</div>
+    </div>
+
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#0D1F35;border-radius:28px 28px 0 0;border:1px solid rgba(255,255,255,.1);z-index:20;padding:14px 20px 38px;">
+      <div style="display:flex;justify-content:center;margin-bottom:14px;"><div style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);"></div></div>
+      <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:13px;">WHERE ARE YOU GOING?</div>
+
+      <!-- location inputs -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;position:relative;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);">
+          <div style="width:11px;height:11px;border-radius:50%;border:2.5px solid #00C9B1;background:#00C9B1;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;">PICKUP</div>
+            <div style="color:#F8FBFF;font-size:14px;font-weight:600;margin-top:2px;">Mactan Pier 1</div>
+            <div style="color:#8AACC8;font-size:11px;">Lapu-Lapu City</div>
+          </div>
+        </div>
+        <div style="position:absolute;left:24px;top:40px;bottom:38px;width:1.5px;background:linear-gradient(#00C9B155,#FF6B6B55);"></div>
+        <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:#0D1F35;border:1px solid rgba(0,201,177,.4);display:flex;align-items:center;justify-content:center;z-index:5;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C9B1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px 14px;">
+          <div style="width:11px;height:11px;border-radius:50%;border:2.5px solid #FF6B6B;background:#FF6B6B;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;">DESTINATION</div>
+            <div style="color:#F8FBFF;font-size:14px;font-weight:600;margin-top:2px;">Olango Island Port</div>
+            <div style="color:#8AACC8;font-size:11px;">Olango Island</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- passengers + fare -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:6px;">PASSENGERS</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button id="btn-minus" onclick="changePassengers(-1)" style="width:26px;height:26px;border-radius:50%;background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);color:#00C9B1;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;">−</button>
+            <span id="pax-count" style="color:#F8FBFF;font-weight:700;font-size:16px;">2</span>
+            <button onclick="changePassengers(1)" style="width:26px;height:26px;border-radius:50%;background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);color:#00C9B1;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;">+</button>
+          </div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:6px;">EST. FARE</div>
+          <div id="fare-display" style="color:#00C9B1;font-weight:800;font-size:18px;">₱300</div>
+          <div style="color:#8AACC8;font-size:10px;">total</div>
+        </div>
+      </div>
+
+      <!-- note -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+        <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:6px;">NOTE TO BANGKERO (optional)</div>
+        <input type="text" placeholder='e.g. I have heavy luggage...' style="width:100%;background:none;border:none;outline:none;color:#F8FBFF;font-size:13px;font-style:italic;" />
+      </div>
+
+      <button onclick="go('s-payment')" style="width:100%;padding:15px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:16px;color:#060F1E;font-weight:700;font-size:15px;cursor:pointer;">Find Available Bangkas →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 7: ISLAND HOPPING
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-hopping" style="position:relative;">
+    <div class="sea-bg"></div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+      <path d="M253,347 Q220,290 170,230 Q155,210 143,195" stroke="#2E86AB" stroke-width="2" stroke-dasharray="8,5" fill="none" opacity=".7"/>
+      <path d="M143,195 Q130,165 130,140" stroke="#2E86AB" stroke-width="2" stroke-dasharray="8,5" fill="none" opacity=".6"/>
+      <path d="M130,140 Q140,110 160,90" stroke="#2E86AB" stroke-width="2" stroke-dasharray="8,5" fill="none" opacity=".5"/>
+      <path d="M198,352 Q228,332 258,342 Q288,352 308,372 Q328,392 318,422 Q308,452 288,462 Q268,472 248,457 Q228,442 218,422Z" fill="#1e5234" opacity=".7"/>
+      <path d="M100,140 Q126,125 156,130 Q186,135 196,156 Q206,177 191,197 Q176,217 151,222 Q126,227 106,212 Q86,197 86,171 Q86,156 100,140Z" fill="#1e5234" opacity=".7"/>
+      <ellipse cx="68" cy="108" rx="20" ry="12" fill="#235c38" opacity=".7"/>
+      <ellipse cx="160" cy="84" rx="14" ry="8" fill="#235c38" opacity=".65"/>
+      <circle cx="253" cy="347" r="6" fill="#00C9B1" opacity=".9"/>
+      <circle cx="143" cy="195" r="6" fill="#2E86AB" opacity=".9"/>
+      <circle cx="68" cy="110" r="6" fill="#2E86AB" opacity=".9"/>
+      <circle cx="160" cy="86" r="6" fill="#FF6B6B" opacity=".9"/>
+      <circle cx="160" cy="86" r="14" fill="none" stroke="#FF6B6B" stroke-width="1.5" opacity=".4"/>
+      <text x="151" y="73" font-size="7" fill="#FF6B6B" font-weight="700">FINAL</text>
+    </svg>
+    <div style="position:absolute;top:0;left:0;right:0;height:110px;background:linear-gradient(180deg,rgba(6,15,30,.9) 0%,transparent 100%);z-index:10;"></div>
+    <div style="position:absolute;top:36px;left:16px;right:16px;display:flex;align-items:center;gap:12px;z-index:11;">
+      <button onclick="go('s-passenger')" style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="color:#F8FBFF;font-weight:800;font-size:18px;">🏝️ Island Hopping</div>
+    </div>
+
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#0D1F35;border-radius:28px 28px 0 0;border:1px solid rgba(255,255,255,.1);z-index:20;padding:14px 20px 34px;">
+      <div style="display:flex;justify-content:center;margin-bottom:12px;"><div style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;">
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;">YOUR ITINERARY</div>
+        <div style="color:#2E86AB;font-size:11px;font-weight:700;cursor:pointer;">+ Add Stop</div>
+      </div>
+
+      <!-- stops timeline -->
+      <div style="position:relative;padding-left:28px;margin-bottom:16px;">
+        <div style="position:absolute;left:9px;top:12px;bottom:12px;width:2px;background:linear-gradient(#00C9B133,#2E86AB88,#FF6B6B66);border-radius:2px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="position:absolute;left:4px;width:12px;height:12px;border-radius:50%;background:#00C9B1;border:2px solid #0D1F35;"></div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;flex:1;">
+            <div style="color:#8AACC8;font-size:10px;font-weight:600;">START</div>
+            <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Mactan Pier 1</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="position:absolute;left:4px;width:12px;height:12px;border-radius:50%;background:#2E86AB;border:2px solid #0D1F35;"></div>
+          <div style="background:rgba(46,134,171,.1);border:1px solid rgba(46,134,171,.3);border-radius:12px;padding:10px 12px;flex:1;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="color:#8AACC8;font-size:10px;font-weight:600;">STOP 1 · ~20 min</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;">Olango Island Port</div></div>
+            <span style="color:#FF6B6B;font-size:18px;cursor:pointer;line-height:1;">✕</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="position:absolute;left:4px;width:12px;height:12px;border-radius:50%;background:#2E86AB;border:2px solid #0D1F35;"></div>
+          <div style="background:rgba(46,134,171,.1);border:1px solid rgba(46,134,171,.3);border-radius:12px;padding:10px 12px;flex:1;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="color:#8AACC8;font-size:10px;font-weight:600;">STOP 2 · ~35 min</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;">Caohagan Port</div></div>
+            <span style="color:#FF6B6B;font-size:18px;cursor:pointer;line-height:1;">✕</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="position:absolute;left:4px;width:12px;height:12px;border-radius:50%;background:#FF6B6B;border:2px solid #0D1F35;"></div>
+          <div style="background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);border-radius:12px;padding:10px 12px;flex:1;">
+            <div style="color:#8AACC8;font-size:10px;font-weight:600;">FINAL · ~55 min</div>
+            <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Nalusuan Island</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;text-align:center;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;margin-bottom:4px;">DURATION</div>
+          <div style="color:#F8FBFF;font-weight:700;font-size:15px;">~55 min</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;text-align:center;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;margin-bottom:4px;">TOTAL FARE</div>
+          <div style="color:#00C9B1;font-weight:800;font-size:15px;">₱850</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;text-align:center;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;margin-bottom:4px;">PAX</div>
+          <div style="color:#F8FBFF;font-weight:700;font-size:15px;">4</div>
+        </div>
+      </div>
+
+      <button onclick="go('s-payment')" style="width:100%;padding:15px;background:linear-gradient(135deg,#2E86AB,#1B4F8A);border:none;border-radius:16px;color:#F8FBFF;font-weight:700;font-size:15px;cursor:pointer;">Find Bangka for Island Hop →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 8: PADALA
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-padala" style="position:relative;">
+    <div class="sea-bg"></div>
+    <div style="position:absolute;top:0;left:0;right:0;height:110px;background:linear-gradient(180deg,rgba(6,15,30,.9) 0%,transparent 100%);z-index:10;"></div>
+    <div style="position:absolute;top:36px;left:16px;right:16px;display:flex;align-items:center;gap:12px;z-index:11;">
+      <button onclick="go('s-passenger')" style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="color:#F8FBFF;font-weight:800;font-size:18px;">📦 Send Padala</div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#0D1F35;border-radius:28px 28px 0 0;border:1px solid rgba(255,255,255,.1);z-index:20;padding:14px 20px 34px;max-height:660px;overflow-y:auto;">
+      <div style="display:flex;justify-content:center;margin-bottom:12px;"><div style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);"></div></div>
+      <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:12px;">PICKUP &amp; DELIVERY</div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px;overflow:hidden;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px 9px;border-bottom:1px solid rgba(255,255,255,.07);">
+          <div style="width:10px;height:10px;border-radius:50%;background:#00C9B1;flex-shrink:0;"></div>
+          <div style="flex:1;"><div style="color:#8AACC8;font-size:10px;font-weight:600;">PICKUP FROM</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;margin-top:2px;">Opon Public Market, Lapu-Lapu City</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 16px 13px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#FFB347;flex-shrink:0;"></div>
+          <div style="flex:1;"><div style="color:#8AACC8;font-size:10px;font-weight:600;">DELIVER TO</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;margin-top:2px;">Olango Island Port</div></div>
+        </div>
+      </div>
+      <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:10px;">RECEIVER INFO</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 13px;"><div style="color:#8AACC8;font-size:10px;font-weight:600;">RECEIVER NAME</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;margin-top:3px;">Maria Santos</div></div>
+        <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 13px;"><div style="color:#8AACC8;font-size:10px;font-weight:600;">CONTACT</div><div style="color:#F8FBFF;font-size:13px;font-weight:600;margin-top:3px;">09XX XXX XXXX</div></div>
+      </div>
+      <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:10px;">PARCEL SIZE</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;" id="parcel-size-group">
+        <div onclick="selectParcel(this,'small')" data-size="small" style="flex:1;padding:10px 6px;background:rgba(255,179,71,.14);border:1.5px solid #FFB347;border-radius:12px;text-align:center;cursor:pointer;">
+          <div style="font-size:18px;">📦</div><div style="color:#FFB347;font-size:11px;font-weight:700;margin-top:3px;">Small</div><div style="color:#8AACC8;font-size:10px;">≤2 kg</div>
+        </div>
+        <div onclick="selectParcel(this,'medium')" data-size="medium" style="flex:1;padding:10px 6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;text-align:center;cursor:pointer;">
+          <div style="font-size:18px;">🗃️</div><div style="color:#F8FBFF;font-size:11px;font-weight:600;margin-top:3px;">Medium</div><div style="color:#8AACC8;font-size:10px;">2–10 kg</div>
+        </div>
+        <div onclick="selectParcel(this,'large')" data-size="large" style="flex:1;padding:10px 6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;text-align:center;cursor:pointer;">
+          <div style="font-size:18px;">📫</div><div style="color:#F8FBFF;font-size:11px;font-weight:600;margin-top:3px;">Large</div><div style="color:#8AACC8;font-size:10px;">10 kg+</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+        <div style="color:#8AACC8;font-size:13px;">Estimated Cost</div>
+        <div style="color:#FFB347;font-weight:800;font-size:16px;">₱80 – ₱120</div>
+      </div>
+      <button onclick="go('s-payment')" style="width:100%;padding:15px;background:linear-gradient(135deg,#FFB347,#f0922b);border:none;border-radius:16px;color:#060F1E;font-weight:700;font-size:15px;cursor:pointer;">Find Bangka for Padala →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 9: PAYMENT
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-payment" style="background:#060F1E;overflow-y:auto;">
+    <div style="background:linear-gradient(180deg,#0A2342,#060F1E);padding:52px 24px 20px;">
+      <button onclick="go('s-quickride')" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:20px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="font-size:22px;font-weight:800;color:#F8FBFF;">Booking Summary</div>
+    </div>
+    <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:14px;">
+      <!-- trip card -->
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="color:#F8FBFF;font-weight:700;font-size:15px;">🚤 Boat Ride</div>
+          <div style="background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);border-radius:20px;padding:4px 10px;color:#00C9B1;font-size:11px;font-weight:700;">QUICK RIDE</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:#8AACC8;font-size:13px;">From</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">Mactan Pier 1</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#8AACC8;font-size:13px;">To</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">Olango Island Port</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#8AACC8;font-size:13px;">Passengers</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">2</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#8AACC8;font-size:13px;">Est. Duration</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">~20 min</span></div>
+          <div style="height:1px;background:rgba(255,255,255,.08);margin:4px 0;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#8AACC8;font-size:13px;font-weight:600;">TOTAL</span><span style="color:#00C9B1;font-size:20px;font-weight:800;">₱300</span></div>
+        </div>
+      </div>
+
+      <!-- payment method -->
+      <div>
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:10px;">PAYMENT METHOD</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div id="pay-cash" onclick="selectPayment('cash')" style="display:flex;align-items:center;gap:14px;background:rgba(0,201,177,.1);border:1.5px solid rgba(0,201,177,.4);border-radius:14px;padding:14px 16px;cursor:pointer;">
+            <div style="width:38px;height:38px;border-radius:10px;background:#00C9B1;display:flex;align-items:center;justify-content:center;font-size:18px;">💵</div>
+            <div style="flex:1;"><div style="color:#F8FBFF;font-weight:700;font-size:14px;">Cash</div><div style="color:#8AACC8;font-size:12px;">Pay bangkero directly</div></div>
+            <div id="check-cash" style="width:18px;height:18px;border-radius:50%;background:#00C9B1;display:flex;align-items:center;justify-content:center;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#060F1E" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+          </div>
+          <div id="pay-gcash" onclick="selectPayment('gcash')" style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;cursor:pointer;">
+            <div style="width:38px;height:38px;border-radius:10px;background:#00A3E0;display:flex;align-items:center;justify-content:center;font-size:18px;">📱</div>
+            <div style="flex:1;"><div style="color:#F8FBFF;font-weight:700;font-size:14px;">GCash</div><div style="color:#8AACC8;font-size:12px;">Pay via GCash app</div></div>
+            <div id="check-gcash" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- note preview -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;">
+        <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:5px;">YOUR NOTE</div>
+        <div style="color:#F8FBFF;font-size:13px;font-style:italic;">"Please bring a life jacket for my child"</div>
+      </div>
+
+      <button onclick="go('s-confirm')" style="width:100%;padding:16px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:18px;color:#060F1E;font-weight:700;font-size:16px;cursor:pointer;margin-top:4px;">Confirm Booking · ₱300</button>
+      <div style="text-align:center;color:#8AACC8;font-size:12px;line-height:1.5;">By confirming, you agree to BangkaGo's terms.<br>Your booking will be visible to nearby bangkeros.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 10: BOOKING CONFIRMED
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-confirm" style="background:#060F1E;align-items:center;justify-content:center;padding:40px 24px;flex-direction:column;">
+    <div style="width:90px;height:90px;border-radius:50%;background:rgba(0,201,177,.15);border:2px solid rgba(0,201,177,.4);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:24px;">✅</div>
+    <div style="font-size:26px;font-weight:800;color:#F8FBFF;text-align:center;margin-bottom:8px;">Booking Posted!</div>
+    <div style="color:#8AACC8;font-size:14px;text-align:center;margin-bottom:32px;line-height:1.6;">Your trip request has been posted. Nearby bangkeros can now see and accept your booking.</div>
+    <div style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:#8AACC8;font-size:13px;">Booking ID</span><span style="color:#00C9B1;font-size:13px;font-weight:700;">#BGO-2024-0391</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:#8AACC8;font-size:13px;">Route</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">Pier 1 → Olango</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:#8AACC8;font-size:13px;">Status</span><span style="color:#FFB347;font-size:13px;font-weight:700;">Waiting for bangkero...</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#8AACC8;font-size:13px;">Payment</span><span style="color:#F8FBFF;font-size:13px;font-weight:600;">Cash · ₱300</span></div>
+    </div>
+    <div style="display:flex;gap:10px;width:100%;">
+      <button onclick="go('s-passenger')" style="flex:1;padding:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;color:#F8FBFF;font-weight:600;font-size:14px;cursor:pointer;">Back to Home</button>
+      <button onclick="go('s-passenger')" style="flex:1;padding:14px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:16px;color:#060F1E;font-weight:700;font-size:14px;cursor:pointer;">Track on Map</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 11: SIDE DRAWER
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-drawer" style="background:#060F1E;flex-direction:column;overflow-y:auto;">
+    <div style="background:linear-gradient(180deg,#0A2342,#060F1E);padding:52px 24px 24px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#2E86AB);display:flex;align-items:center;justify-content:center;font-size:28px;">🧑</div>
+        <div>
+          <div style="color:#F8FBFF;font-weight:800;font-size:18px;">Juan Dela Cruz</div>
+          <div style="color:#8AACC8;font-size:13px;">juan@gmail.com</div>
+          <div style="color:#00C9B1;font-size:12px;font-weight:600;margin-top:3px;">⭐ 4.9 · 28 trips</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:8px 24px 40px;display:flex;flex-direction:column;gap:2px;">
+      <div onclick="go('s-passenger')" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(0,201,177,.12);display:flex;align-items:center;justify-content:center;font-size:18px;">🗺️</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">Map &amp; Book Ride</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(46,134,171,.12);display:flex;align-items:center;justify-content:center;font-size:18px;">🧾</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">Trip History</div>
+        <div style="background:rgba(0,201,177,.2);border-radius:20px;padding:3px 8px;color:#00C9B1;font-size:11px;font-weight:700;margin-right:8px;">3 new</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,179,71,.12);display:flex;align-items:center;justify-content:center;font-size:18px;">📌</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">Saved Places</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,107,.12);display:flex;align-items:center;justify-content:center;font-size:18px;">🆘</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">Technical Support</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">My Profile</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:18px;">🔔</div>
+        <div style="flex:1;color:#F8FBFF;font-size:14px;font-weight:600;">Notifications</div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8AACC8" stroke-width="2.5" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div style="margin-top:16px;padding:14px 0;">
+        <button onclick="go('s-welcome')" style="display:flex;align-items:center;gap:14px;background:none;border:none;cursor:pointer;padding:0;">
+          <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,107,.1);display:flex;align-items:center;justify-content:center;font-size:18px;">🚪</div>
+          <span style="color:#FF6B6B;font-size:14px;font-weight:600;">Sign Out</span>
+        </button>
+      </div>
+    </div>
+    <!-- close btn -->
+    <div style="display:flex;justify-content:center;padding-bottom:30px;">
+      <button onclick="go('s-passenger')" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#060F1E" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 12: BANGKERO HOME
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-bangkero" style="background:#060F1E;flex-direction:column;overflow-y:auto;">
+    <div style="background:linear-gradient(180deg,#0A2342 0%,#060F1E 100%);padding:52px 20px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <div style="font-size:22px;font-weight:900;color:#F8FBFF;">Bangka<span style="color:#FFB347;">Go</span></div>
+          <div style="color:#8AACC8;font-size:11px;margin-top:2px;">⚓ Bangkero Dashboard</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:6px;">
+            <div style="width:7px;height:7px;border-radius:50%;background:#00C9B1;animation:pulse 1.6s infinite;"></div>
+            <span style="color:#00C9B1;font-size:12px;font-weight:700;">Online</span>
+          </div>
+          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FFB347,#f0922b);display:flex;align-items:center;justify-content:center;font-size:18px;">⚓</div>
+        </div>
+      </div>
+      <!-- earnings -->
+      <div style="background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);border-radius:18px;padding:16px;">
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:8px;">TODAY'S EARNINGS</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+          <div>
+            <div style="color:#FFB347;font-size:32px;font-weight:800;">₱1,250</div>
+            <div style="color:#8AACC8;font-size:12px;">5 trips completed · 4 passengers</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="color:#00C9B1;font-size:12px;font-weight:700;">+₱150 from yesterday</div>
+            <div style="color:#8AACC8;font-size:11px;">↑ 13.6%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 30px;flex:1;">
+      <!-- AI badge -->
+      <div style="background:rgba(83,74,183,.15);border:1px solid rgba(83,74,183,.35);border-radius:14px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:22px;">🤖</div>
+        <div style="flex:1;">
+          <div style="color:#F8FBFF;font-size:13px;font-weight:700;">AI Demand Prediction</div>
+          <div style="color:#8AACC8;font-size:12px;">High demand expected 10AM–2PM today · Olango route</div>
+        </div>
+      </div>
+
+      <!-- filter tabs -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="color:#8AACC8;font-size:11px;font-weight:600;letter-spacing:.5px;">AVAILABLE BOOKINGS (4)</div>
+        <div style="display:flex;gap:8px;">
+          <div style="background:rgba(0,201,177,.15);border-radius:20px;padding:4px 10px;color:#00C9B1;font-size:10px;font-weight:700;cursor:pointer;">Rides</div>
+          <div style="background:rgba(255,255,255,.07);border-radius:20px;padding:4px 10px;color:#8AACC8;font-size:10px;cursor:pointer;">Padala</div>
+          <div style="background:rgba(255,255,255,.07);border-radius:20px;padding:4px 10px;color:#8AACC8;font-size:10px;cursor:pointer;">All</div>
+        </div>
+      </div>
+
+      <!-- booking cards -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <!-- Ride card -->
+        <div style="background:rgba(0,201,177,.08);border:1.5px solid rgba(0,201,177,.3);border-radius:18px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-size:16px;">🚤</div>
+              <div style="color:#F8FBFF;font-weight:700;font-size:14px;">Boat Ride</div>
+            </div>
+            <div style="color:#00C9B1;font-weight:800;font-size:17px;">₱300</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#00C9B1;flex-shrink:0;"></div>
+            <span style="color:#F8FBFF;font-size:13px;">Mactan Pier 1 → Olango Island Port</span>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:10px;">
+            <span style="color:#8AACC8;font-size:12px;">👥 2 passengers</span>
+            <span style="color:#8AACC8;font-size:12px;">💵 Cash</span>
+            <span style="color:#8AACC8;font-size:12px;">⭐ 4.9</span>
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px;margin-bottom:12px;">
+            <span style="color:#8AACC8;font-size:11px;font-style:italic;">"Please bring a life jacket for my child"</span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button style="flex:1;padding:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#8AACC8;font-weight:600;font-size:13px;cursor:pointer;">Decline</button>
+            <button onclick="go('s-bangkero-trip')" style="flex:2;padding:11px;background:linear-gradient(135deg,#00C9B1,#2E86AB);border:none;border-radius:12px;color:#060F1E;font-weight:700;font-size:13px;cursor:pointer;">Accept Ride →</button>
+          </div>
+        </div>
+
+        <!-- Padala card -->
+        <div style="background:rgba(255,179,71,.08);border:1.5px solid rgba(255,179,71,.25);border-radius:18px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-size:16px;">📦</div>
+              <div style="color:#F8FBFF;font-weight:700;font-size:14px;">Padala</div>
+            </div>
+            <div style="color:#FFB347;font-weight:800;font-size:17px;">₱90</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#FFB347;flex-shrink:0;"></div>
+            <span style="color:#F8FBFF;font-size:13px;">Opon Public Market → Olango Port</span>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px;">
+            <span style="color:#8AACC8;font-size:12px;">📦 Small (≤2 kg)</span>
+            <span style="color:#8AACC8;font-size:12px;">📱 GCash</span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button style="flex:1;padding:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#8AACC8;font-weight:600;font-size:13px;cursor:pointer;">Decline</button>
+            <button style="flex:2;padding:11px;background:linear-gradient(135deg,#FFB347,#f0922b);border:none;border-radius:12px;color:#060F1E;font-weight:700;font-size:13px;cursor:pointer;">Accept Padala →</button>
+          </div>
+        </div>
+
+        <!-- Island Hopping card -->
+        <div style="background:rgba(46,134,171,.08);border:1px solid rgba(46,134,171,.25);border-radius:18px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-size:16px;">🏝️</div>
+              <div style="color:#F8FBFF;font-weight:700;font-size:14px;">Island Hopping</div>
+            </div>
+            <div style="color:#2E86AB;font-weight:800;font-size:17px;">₱850</div>
+          </div>
+          <div style="color:#8AACC8;font-size:12px;margin-bottom:6px;">Pier 1 → Olango → Caohagan → Nalusuan</div>
+          <div style="display:flex;gap:12px;margin-bottom:12px;">
+            <span style="color:#8AACC8;font-size:12px;">👥 4 passengers</span>
+            <span style="color:#8AACC8;font-size:12px;">💵 Cash</span>
+            <span style="color:#8AACC8;font-size:12px;">~55 min</span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button style="flex:1;padding:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#8AACC8;font-weight:600;font-size:13px;cursor:pointer;">Decline</button>
+            <button style="flex:2;padding:11px;background:linear-gradient(135deg,#2E86AB,#1B4F8A);border:none;border-radius:12px;color:#F8FBFF;font-weight:700;font-size:13px;cursor:pointer;">Accept Trip →</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 13: BANGKERO ACTIVE TRIP
+  ═══════════════════════════════════════ -->
+  <div class="screen" id="s-bangkero-trip" style="position:relative;">
+    <div class="sea-bg"></div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
+      <path d="M253,347 Q215,280 160,200 Q148,175 143,158" stroke="#00C9B1" stroke-width="2.5" stroke-dasharray="6,4" fill="none" opacity=".8"/>
+      <path d="M198,352 Q228,332 258,342 Q288,352 308,372 Q328,392 318,422 Q308,452 288,462 Q268,472 248,457 Q228,442 218,422Z" fill="#1e5234" opacity=".7"/>
+      <path d="M100,140 Q126,125 156,130 Q186,135 196,156 Q206,177 191,197 Q176,217 151,222 Q126,227 106,212 Q86,197 86,171 Q86,156 100,140Z" fill="#1e5234" opacity=".7"/>
+      <circle cx="143" cy="158" r="8" fill="#FF6B6B" opacity=".9"/>
+      <circle cx="143" cy="158" r="18" fill="none" stroke="#FF6B6B" stroke-width="2" opacity=".4"/>
+      <text x="150" y="150" font-size="8" fill="#FF6B6B" font-weight="700">DESTINATION</text>
+    </svg>
+    <!-- my bangka -->
+    <div id="my-boat" style="position:absolute;left:253px;top:310px;z-index:6;font-size:26px;transform:translate(-50%,-50%);">🚤</div>
+    <div id="my-boat-ring" style="position:absolute;left:253px;top:310px;z-index:5;width:40px;height:40px;border-radius:50%;border:2px solid #00C9B1;transform:translate(-50%,-50%);animation:pulse 1.5s infinite;"></div>
+
+    <!-- top bar -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:36px 18px 14px;background:linear-gradient(180deg,rgba(6,15,30,.95) 0%,transparent 100%);z-index:10;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="go('s-bangkero')" style="width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F8FBFF" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div style="flex:1;">
+          <div style="color:#F8FBFF;font-weight:700;font-size:16px;">Active Trip · BGO-0391</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <div style="width:7px;height:7px;border-radius:50%;background:#00C9B1;animation:pulse 1.6s infinite;"></div>
+            <span style="color:#00C9B1;font-size:12px;font-weight:700;">In Transit</span>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:6px 12px;">
+          <div style="color:#8AACC8;font-size:10px;font-weight:600;">GPS</div>
+          <div style="color:#00C9B1;font-size:11px;font-weight:700;">10.316°N</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom panel -->
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#0D1F35;border-radius:28px 28px 0 0;border:1px solid rgba(255,255,255,.1);z-index:20;padding:14px 20px 34px;">
+      <div style="display:flex;justify-content:center;margin-bottom:14px;"><div style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);"></div></div>
+
+      <!-- passenger card -->
+      <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#2E86AB);display:flex;align-items:center;justify-content:center;font-size:20px;">🧑</div>
+        <div style="flex:1;">
+          <div style="color:#F8FBFF;font-weight:700;font-size:14px;">Juan Dela Cruz</div>
+          <div style="color:#8AACC8;font-size:12px;">2 passengers · ⭐ 4.9</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">📞</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">💬</div>
+        </div>
+      </div>
+
+      <!-- route + ETA -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#00C9B1;"></div>
+          <div style="width:1.5px;height:20px;background:linear-gradient(#00C9B155,#FF6B6B55);"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#FF6B6B;"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Mactan Pier 1</div>
+          <div style="color:#8AACC8;font-size:11px;margin:3px 0;">~8 min remaining</div>
+          <div style="color:#F8FBFF;font-size:13px;font-weight:600;">Olango Island Port</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:#FFB347;font-weight:800;font-size:16px;">₱300</div>
+          <div style="color:#8AACC8;font-size:11px;">Cash</div>
+        </div>
+      </div>
+
+      <!-- progress bar -->
+      <div style="background:rgba(255,255,255,.08);border-radius:4px;height:5px;margin-bottom:14px;overflow:hidden;">
+        <div id="progress-bar" style="background:linear-gradient(90deg,#00C9B1,#2E86AB);height:100%;width:60%;border-radius:4px;transition:width 1s ease;"></div>
+      </div>
+
+      <!-- passenger note -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-bottom:14px;">
+        <div style="color:#8AACC8;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:4px;">PASSENGER NOTE</div>
+        <div style="color:#F8FBFF;font-size:12px;font-style:italic;">"Please bring a life jacket for my child"</div>
+      </div>
+
+      <button onclick="go('s-bangkero')" style="width:100%;padding:15px;background:linear-gradient(135deg,#FF6B6B,#cc4444);border:none;border-radius:16px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Mark as Arrived — End Trip</button>
+    </div>
+  </div>
+
+</div><!-- end .phone -->
+
+<script>
+  // ─── navigation ─────────────────────────────────────────
+  function go(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  // ─── animated boats ──────────────────────────────────────
+  let tick = 0;
+  setInterval(() => {
+    tick++;
+    const b1 = document.getElementById('boat1');
+    const b2 = document.getElementById('boat2');
+    const b3 = document.getElementById('boat3');
+    if (b1) { b1.style.left = (182 + Math.sin(tick * 0.35) * 18) + 'px'; b1.style.top = (195 + Math.cos(tick * 0.28) * 11) + 'px'; }
+    if (b2) { b2.style.left = (258 + Math.sin(tick * 0.28 + 1) * 14) + 'px'; b2.style.top = (265 + Math.cos(tick * 0.32 + 1) * 9) + 'px'; }
+    if (b3) { b3.style.left = (118 + Math.sin(tick * 0.42 + 2) * 12) + 'px'; b3.style.top = (155 + Math.cos(tick * 0.36 + 2) * 8) + 'px'; }
+  }, 900);
+
+  // ─── bangkero trip boat movement ────────────────────────
+  let boatX = 253, boatY = 310;
+  let targetX = 143, targetY = 210;
+  let progressPct = 60;
+  setInterval(() => {
+    const boat = document.getElementById('my-boat');
+    const ring = document.getElementById('my-boat-ring');
+    const bar  = document.getElementById('progress-bar');
+    if (!boat) return;
+    boatX += (targetX - boatX) * 0.005;
+    boatY += (targetY - boatY) * 0.005;
+    boat.style.left = boatX + 'px';
+    boat.style.top  = boatY + 'px';
+    if (ring) { ring.style.left = boatX + 'px'; ring.style.top = boatY + 'px'; }
+    progressPct = Math.min(100, progressPct + 0.05);
+    if (bar) bar.style.width = progressPct + '%';
+  }, 200);
+
+  // ─── passenger count / fare ─────────────────────────────
+  let paxCount = 2;
+  const farePerPax = 150;
+  function changePassengers(delta) {
+    paxCount = Math.max(1, Math.min(10, paxCount + delta));
+    const el = document.getElementById('pax-count');
+    const fare = document.getElementById('fare-display');
+    if (el) el.textContent = paxCount;
+    if (fare) fare.textContent = '₱' + (paxCount * farePerPax);
+  }
+
+  // ─── parcel size selection ───────────────────────────────
+  function selectParcel(el, size) {
+    document.querySelectorAll('#parcel-size-group > div').forEach(d => {
+      d.style.background = 'rgba(255,255,255,0.05)';
+      d.style.border = '1px solid rgba(255,255,255,0.1)';
+      d.querySelector('div:nth-child(2)').style.color = '#F8FBFF';
+    });
+    el.style.background = 'rgba(255,179,71,0.14)';
+    el.style.border = '1.5px solid #FFB347';
+    el.querySelector('div:nth-child(2)').style.color = '#FFB347';
+  }
+
+  // ─── payment method selection ────────────────────────────
+  function selectPayment(method) {
+    const cashRow   = document.getElementById('pay-cash');
+    const gcashRow  = document.getElementById('pay-gcash');
+    const checkCash  = document.getElementById('check-cash');
+    const checkGcash = document.getElementById('check-gcash');
+    if (method === 'cash') {
+      cashRow.style.background   = 'rgba(0,201,177,0.1)';
+      cashRow.style.border       = '1.5px solid rgba(0,201,177,0.4)';
+      gcashRow.style.background  = 'rgba(255,255,255,0.04)';
+      gcashRow.style.border      = '1px solid rgba(255,255,255,0.1)';
+      checkCash.style.background  = '#00C9B1';
+      checkCash.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#060F1E" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      checkGcash.style.background = 'transparent';
+      checkGcash.innerHTML = '';
+    } else {
+      gcashRow.style.background  = 'rgba(0,163,224,0.1)';
+      gcashRow.style.border      = '1.5px solid rgba(0,163,224,0.4)';
+      cashRow.style.background   = 'rgba(255,255,255,0.04)';
+      cashRow.style.border       = '1px solid rgba(255,255,255,0.1)';
+      checkGcash.style.background = '#00A3E0';
+      checkGcash.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      checkCash.style.background  = 'transparent';
+      checkCash.innerHTML = '';
+    }
+  }
+</script>
+
+</body>
+</html>
